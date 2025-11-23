@@ -14,6 +14,21 @@
 hub:
   db:
     type: sqlite-memory
+  config:
+    DummyAuthenticator:
+      password: "jupyter"
+    Authenticator:
+      admin_users:
+        - admin
+      allowed_users:
+        - admin
+        - user1
+        - user2
+        - user3
+      # Disable auto-adding users to the whitelist
+      allow_all: false
+    JupyterHub:
+      authenticator_class: dummy
 
 singleuser:
   storage:
