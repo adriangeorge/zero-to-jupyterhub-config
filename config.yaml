@@ -1,16 +1,3 @@
-# This file can update the JupyterHub Helm chart's default configuration values.
-#
-# For reference see the configuration reference and default values, but make
-# sure to refer to the Helm chart version of interest to you!
-#
-# Introduction to YAML:     https://www.youtube.com/watch?v=cdLNKUoMc6c
-# Chart config reference:   https://zero-to-jupyterhub.readthedocs.io/en/stable/resources/reference.html
-# Chart default values:     https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/HEAD/jupyterhub/values.yaml
-# Available chart versions: https://hub.jupyter.org/helm-chart/
-#
-
-# Configuration for JupyterHub with persistent storage
-# Hub database persists across restarts, user data is stored in PVCs
 hub:
   db:
     type: sqlite-pvc
@@ -18,24 +5,89 @@ hub:
       storageClassName: standard
       storage: 1Gi
   config:
-    DummyAuthenticator:
-      password: "jupyter"
+    JupyterHub:
+      authenticator_class: nativeauthenticator.NativeAuthenticator
+      admin_access: true
+      default_url: /hub/home
+      redirect_to_server: false
+      load_groups:
+        admins:
+          users:
+            - admin
+        teacher-prof-smith:
+          users:
+            - prof_smith
+        teacher-prof-jones:
+          users:
+            - prof_jones
+        teacher-prof-doe:
+          users:
+            - prof_doe
+        teachers:
+          users:
+            - prof_smith
+            - prof_jones
+            - prof_doe
+      load_roles:
+        - name: teacher
+          scopes:
+            - self
+          groups:
+            - teachers
+    
+    NativeAuthenticator:
+      enable_signup: true
+      ask_email_on_signup: true
+      open_signup: false
+      minimum_password_length: 8
+      check_common_password: true
+    
     Authenticator:
       admin_users:
         - admin
-      allowed_users:
-        - admin
-        - user1
-        - user2
-        - user3
-      # Disable auto-adding users to the whitelist
-      allow_all: false
-    JupyterHub:
-      authenticator_class: dummy
+      allow_all: true
+  
+  extraVolumes:
+    - name: hub-config-modules
+      configMap:
+        name: hub-config-modules
+  
+  extraVolumeMounts:
+    - name: hub-config-modules
+      mountPath: /usr/local/etc/jupyterhub/hub-config
+      readOnly: true
+  
+  extraConfig:
+    00-install-nativeauth: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/00_install_nativeauth.py').read())
+    
+    01-custom-home-handler: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/01_custom_home_handler.py').read())
+      register_handler(c)
+    
+    02-my-students-handler: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/02_my_students_handler.py').read())
+      register_handler(c)
+    
+    03-load-native-handlers: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/03_load_native_handlers.py').read())
+      register_handlers(c)
+    
+    04-custom-spawner: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/04_custom_spawner.py').read())
+      configure_spawner(c)
+    
+    05-student-auto-auth: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/05_student_auto_auth.py').read())
+      configure_auth_hook(c)
+    
+    06-custom-admin-groups: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/06_custom_admin_groups.py').read())
+      register_handler(c)
 
 singleuser:
   nodeSelector:
-    kubernetes.io/hostname: minikube  # this is done for minikube env only, remove in production and implement some nfs
+    kubernetes.io/hostname: minikube
   storage:
     type: dynamic
     capacity: 1Gi
@@ -49,3 +101,45 @@ singleuser:
       - name: shared-datasets
         mountPath: /home/jovyan/shared-data
         readOnly: true
+  
+  profileList:
+    - display_name: "Prof. Smith's Class - Introduction to Data Science"
+      description: "Join Prof. Smith's class"
+      slug: prof-smith-class
+      default: true
+      kubespawner_override:
+        cpu_limit: 1.0
+        cpu_guarantee: 0.5
+        mem_limit: "2G"
+        mem_guarantee: "1G"
+        image: quay.io/jupyterhub/k8s-singleuser-sample:3.3.8
+    
+    - display_name: "Prof. Jones's Class - Advanced Python Programming"
+      description: "Join Prof. Jones's class"
+      slug: prof-jones-class
+      kubespawner_override:
+        cpu_limit: 1.0
+        cpu_guarantee: 0.5
+        mem_limit: "2G"
+        mem_guarantee: "1G"
+        image: quay.io/jupyterhub/k8s-singleuser-sample:3.3.8
+    
+    - display_name: "Prof. Doe's Class - Machine Learning Fundamentals"
+      description: "Join Prof. Doe's class"
+      slug: prof-doe-class
+      kubespawner_override:
+        cpu_limit: 1.0
+        cpu_guarantee: 0.5
+        mem_limit: "2G"
+        mem_guarantee: "1G"
+        image: quay.io/jupyterhub/k8s-singleuser-sample:3.3.8
+    
+    - display_name: "Teacher Environment"
+      description: "For teachers only - enhanced resources"
+      slug: teacher-environment
+      kubespawner_override:
+        cpu_limit: 2.0
+        cpu_guarantee: 1.0
+        mem_limit: "4G"
+        mem_guarantee: "2G"
+        image: quay.io/jupyterhub/k8s-singleuser-sample:3.3.8
