@@ -9,11 +9,14 @@
 # Available chart versions: https://hub.jupyter.org/helm-chart/
 #
 
-# Minimal configuration for running JupyterHub with an in-memory SQLite database
-# This is NOT suitable for production use! We use this for minikube and testing purposes only.
+# Configuration for JupyterHub with persistent storage
+# Hub database persists across restarts, user data is stored in PVCs
 hub:
   db:
-    type: sqlite-memory
+    type: sqlite-pvc
+    pvc:
+      storageClassName: standard
+      storage: 1Gi
   config:
     DummyAuthenticator:
       password: "jupyter"
@@ -31,5 +34,18 @@ hub:
       authenticator_class: dummy
 
 singleuser:
+  nodeSelector:
+    kubernetes.io/hostname: minikube  # this is done for minikube env only, remove in production and implement some nfs
   storage:
-    type: none
+    type: dynamic
+    capacity: 1Gi
+    dynamic:
+      storageClass: standard
+    extraVolumes:
+      - name: shared-datasets
+        persistentVolumeClaim:
+          claimName: shared-datasets-pvc
+    extraVolumeMounts:
+      - name: shared-datasets
+        mountPath: /home/jovyan/shared-data
+        readOnly: true
