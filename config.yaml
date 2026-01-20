@@ -7,6 +7,9 @@ hub:
   templatePaths:
     - /usr/local/etc/jupyterhub/hub-config
   
+  nodeSelector:
+    kubernetes.io/hostname: minikube
+  
   resources:
     requests:
       cpu: 200m
@@ -112,6 +115,12 @@ hub:
     10-manage-groups: |
       exec(open('/usr/local/etc/jupyterhub/hub-config/10_manage_groups.py').read())
       register_handler(c)
+
+proxy:
+  service:
+    type: NodePort
+    nodePorts:
+      http: 30080
 
 singleuser:
   nodeSelector:
