@@ -1,0 +1,229 @@
+{% extends "page.html" %}
+
+{% block main %}
+<div class="container">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .z2jh-unified {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.1);
+      margin-bottom: 24px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .z2jh-unified:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 70px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.2);
+    }
+    .page-title {
+      text-align: center;
+      margin: 40px 0 12px;
+      color: #fff;
+      font-size: 2.8em;
+      font-weight: 800;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      letter-spacing: -0.5px;
+    }
+    .page-subtitle {
+      text-align: center;
+      margin-bottom: 32px;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 1.15em;
+      font-weight: 400;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .button-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 15px;
+    }
+    .button-box {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: 8px 0;
+    }
+    .z2jh-unified .btn {
+      min-width: 220px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+    .z2jh-unified .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    .z2jh-unified .btn:hover::before {
+      left: 100%;
+    }
+    .z2jh-unified .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+      background: linear-gradient(135deg, #7b8ff7 0%, #8b5cb8 100%);
+    }
+    .z2jh-unified .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+    #stop {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+    }
+    #stop:hover {
+      background: linear-gradient(135deg, #f5a3ff 0%, #ff6b7f 100%);
+      box-shadow: 0 8px 25px rgba(245, 87, 108, 0.5);
+    }
+    .server-status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-active {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      box-shadow: 0 2px 10px rgba(56, 239, 125, 0.3);
+    }
+    .badge-inactive {
+      background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
+      color: white;
+      box-shadow: 0 2px 10px rgba(149, 165, 166, 0.3);
+    }
+  </style>
+  <div class="row">
+    <div class="col-xs-12">
+      <h1 class="page-title">Welcome, {{ user.name }}</h1>
+      <p class="page-subtitle">Your JupyterHub Control Center</p>
+    </div>
+  </div>
+
+  {% set group_names = user.groups | map(attribute='name') | list %}
+  {% set is_teacher = 'teachers' in group_names %}
+
+  {% if not user.admin and not is_teacher %}
+  <div class="row" style="margin-top: 20px;">
+    <div class="col-xs-12 button-row">
+      <div class="z2jh-unified">
+        <div style="text-align: center; margin-bottom: 20px;">
+          {% if default_server.active %}
+            <span class="server-status-badge badge-active">Server Running</span>
+          {% else %}
+            <span class="server-status-badge badge-inactive">Server Offline</span>
+          {% endif %}
+        </div>
+        {% if default_server.active %}
+          <div class="button-box">
+            <a id="stop" role="button" class="btn">Stop My Server</a>
+          </div>
+        {% endif %}
+        <div class="button-box">
+          <a id="start" role="button" class="btn" href="{{ base_url }}spawn">
+            {% if default_server.active %}Open{% else %}Start{% endif %} My Server
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if user.admin %}
+  <div class="row" style="margin-top: 20px;">
+    <div class="col-xs-12 button-row">
+      <div class="z2jh-unified">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; color: #667eea; font-size: 1.3em; font-weight: 700;">Admin Controls</h3>
+        </div>
+        <div class="button-box">
+          <a class="btn" href="{{ base_url }}admin-panel">Admin Panel</a>
+        </div>
+        <div class="button-box">
+          <a class="btn" href="{{ base_url }}authorize">Manage Users</a>
+        </div>
+        <div class="button-box">
+          <a class="btn" href="{{ base_url }}logout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% for group in user.groups %}
+    {% if group.name == "teachers" %}
+    <div class="row" style="margin-top: 20px;">
+      <div class="col-xs-12 button-row">
+        <div class="z2jh-unified">
+          <div style="text-align: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; color: #667eea; font-size: 1.3em; font-weight: 700;">Teacher Dashboard</h3>
+          </div>
+          <div class="button-box">
+            <a class="btn" href="{{ base_url }}my-students">My Students</a>
+          </div>
+          <div class="button-box">
+            <a class="btn" href="{{ base_url }}change-password">Change Password</a>
+          </div>
+          <div class="button-box">
+            <a class="btn" href="{{ base_url }}logout">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  {% if not user.admin and not is_teacher %}
+  <div class="row" style="margin-top: 20px;">
+    <div class="col-xs-12 button-row">
+      <div class="z2jh-unified">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; color: #667eea; font-size: 1.3em; font-weight: 700;">Student Portal</h3>
+        </div>
+        <div class="button-box">
+          <a class="btn" href="{{ base_url }}change-password">Change Password</a>
+        </div>
+        <div class="button-box">
+          <a class="btn" href="{{ base_url }}enroll">Enroll in a Class</a>
+        </div>
+        <div class="button-box">
+          <a class="btn" href="{{ base_url }}logout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block script %}
+  {{ super() }}
+  <script type="text/javascript">
+    require(["home"]);
+  </script>
+{% endblock script %}
