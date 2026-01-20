@@ -4,6 +4,17 @@ hub:
     pvc:
       storageClassName: standard
       storage: 1Gi
+  templatePaths:
+    - /usr/local/etc/jupyterhub/hub-config
+  
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 2Gi
+  
   config:
     JupyterHub:
       authenticator_class: nativeauthenticator.NativeAuthenticator
@@ -32,6 +43,13 @@ hub:
         - name: teacher
           scopes:
             - self
+            - admin:servers  # Can access all user servers
+            - access:servers  # Can access servers via browser
+            - list:users  # Can list users
+            - read:users:name  # Can read user names
+            - read:users:groups  # Can read user groups
+            - read:users:activity  # Can read user activity
+            - read:servers  # Can read server info
           groups:
             - teachers
     
@@ -41,6 +59,8 @@ hub:
       open_signup: false
       minimum_password_length: 8
       check_common_password: true
+      template_paths:
+        - /usr/local/etc/jupyterhub/hub-config
     
     Authenticator:
       admin_users:
@@ -81,8 +101,16 @@ hub:
       exec(open('/usr/local/etc/jupyterhub/hub-config/05_student_auto_auth.py').read())
       configure_auth_hook(c)
     
-    06-custom-admin-groups: |
-      exec(open('/usr/local/etc/jupyterhub/hub-config/06_custom_admin_groups.py').read())
+    07-student-enrollment: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/07_student_enrollment.py').read())
+      register_handler(c)
+    
+    08-custom-admin-panel: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/08_custom_admin_panel.py').read())
+      register_handler(c)
+    
+    10-manage-groups: |
+      exec(open('/usr/local/etc/jupyterhub/hub-config/10_manage_groups.py').read())
       register_handler(c)
 
 singleuser:
@@ -103,43 +131,12 @@ singleuser:
         readOnly: true
   
   profileList:
-    - display_name: "Prof. Smith's Class - Introduction to Data Science"
-      description: "Join Prof. Smith's class"
-      slug: prof-smith-class
+    - display_name: "Student Environment"
+      description: "Default environment for students"
       default: true
       kubespawner_override:
         cpu_limit: 1.0
         cpu_guarantee: 0.5
         mem_limit: "2G"
         mem_guarantee: "1G"
-        image: quay.io/jupyterhub/k8s-singleuser-sample:3.3.8
-    
-    - display_name: "Prof. Jones's Class - Advanced Python Programming"
-      description: "Join Prof. Jones's class"
-      slug: prof-jones-class
-      kubespawner_override:
-        cpu_limit: 1.0
-        cpu_guarantee: 0.5
-        mem_limit: "2G"
-        mem_guarantee: "1G"
-        image: quay.io/jupyterhub/k8s-singleuser-sample:3.3.8
-    
-    - display_name: "Prof. Doe's Class - Machine Learning Fundamentals"
-      description: "Join Prof. Doe's class"
-      slug: prof-doe-class
-      kubespawner_override:
-        cpu_limit: 1.0
-        cpu_guarantee: 0.5
-        mem_limit: "2G"
-        mem_guarantee: "1G"
-        image: quay.io/jupyterhub/k8s-singleuser-sample:3.3.8
-    
-    - display_name: "Teacher Environment"
-      description: "For teachers only - enhanced resources"
-      slug: teacher-environment
-      kubespawner_override:
-        cpu_limit: 2.0
-        cpu_guarantee: 1.0
-        mem_limit: "4G"
-        mem_guarantee: "2G"
         image: quay.io/jupyterhub/k8s-singleuser-sample:3.3.8

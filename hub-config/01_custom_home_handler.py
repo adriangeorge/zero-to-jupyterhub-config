@@ -31,16 +31,8 @@ class CustomHomeHandler(BaseHandler):
         try:
             spawner = user.orm_spawners[0] if user.orm_spawners else None
             server_running = spawner.server is not None if spawner else False
-        except:
+        except Exception:
             server_running = False
-        
-        # Get student's current class (if student)
-        current_class = None
-        if is_student and user_groups:
-            for group_name in user_groups:
-                if group_name.startswith('teacher-prof-'):
-                    current_class = group_name.replace('teacher-prof-', 'Prof. ').replace('-', ' ').title()
-                    break
         
         actions_html = ""
         
@@ -78,7 +70,16 @@ class CustomHomeHandler(BaseHandler):
         
         # Student-specific actions
         if is_student:
-            class_display = f'<strong>{current_class}</strong>' if current_class else 'Not enrolled yet'
+            current_class = None
+            for group_name in user_groups:
+                if group_name.startswith('teacher-prof-'):
+                    current_class = group_name.replace('teacher-prof-', 'Prof. ').replace('-', ' ').title()
+                    break
+            if current_class is None:
+                self.redirect("/hub/enroll")
+                return
+
+            class_display = f'<strong>{current_class}</strong>'
             actions_html += f'''
             <div class="action-card student-class">
                 <div class="action-icon">👥</div>
@@ -139,10 +140,10 @@ class CustomHomeHandler(BaseHandler):
             </div>
             <div class="action-card admin-authorize">
                 <div class="action-icon">✅</div>
-                <h3>Authorize Users</h3>
+                <h3>Manage Users</h3>
                 <p>Approve or reject pending registrations</p>
                 <a href="/hub/authorize" class="btn btn-primary">
-                    <span class="btn-icon">👤</span> Authorize Users
+                    <span class="btn-icon">👤</span> Manage Users
                 </a>
             </div>
             <div class="action-card admin-groups">
@@ -544,6 +545,10 @@ def replace_home_handler(web_app):
 def register_handler(c):
     """Register the custom home handler to override built-in /home"""
     
+    if not hasattr(c.JupyterHub, 'extra_handlers') or c.JupyterHub.extra_handlers is None:
+        c.JupyterHub.extra_handlers = []
+    c.JupyterHub.extra_handlers.append((r'/home', CustomHomeHandler))
+
     # Set the hook to replace the handler after web app is initialized
     original_init_webapp = getattr(c.JupyterHub, 'init_webapp', None)
     

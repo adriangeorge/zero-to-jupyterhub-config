@@ -50,7 +50,8 @@ class MyStudentsHandler(BaseHandler):
             except:
                 is_active = False
             
-            status = "🟢 Active" if is_active else "⚪ Offline"
+            status = "Active" if is_active else "Offline"
+            status_badge = f'<span style="color: #38ef7d; font-weight: 600;">{status}</span>' if is_active else f'<span style="color: #95a5a6; font-weight: 600;">{status}</span>'
             
             last_activity = student.last_activity
             if last_activity:
@@ -70,16 +71,20 @@ class MyStudentsHandler(BaseHandler):
             else:
                 activity_str = "Never"
             
+            # Add connect button
+            connect_btn = f'<a href="/user/{student.name}/" target="_blank" class="btn btn-xs" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 6px 14px; border-radius: 8px; text-decoration: none; font-weight: 600;">Connect</a>'
+            
             student_rows += f"""
             <tr>
                 <td>{student.name}</td>
-                <td>{status}</td>
+                <td>{status_badge}</td>
                 <td>{activity_str}</td>
+                <td>{connect_btn}</td>
             </tr>
             """
         
         if not students:
-            student_rows = '<tr><td colspan="3" style="text-align: center; color: #999;">No students in your class yet</td></tr>'
+            student_rows = '<tr><td colspan="4" style="text-align: center; color: #999;">No students in your class yet</td></tr>'
         
         teacher_name = teacher_group_name.replace('teacher-prof-', 'Prof. ').replace('-', ' ').title()
         
@@ -90,300 +95,141 @@ class MyStudentsHandler(BaseHandler):
             <title>My Students - {teacher_name}</title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+            <link rel="stylesheet" href="/hub/static/css/style.min.css" type="text/css" />
             <style>
-                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-                
                 body {{
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     min-height: 100vh;
-                    padding: 30px;
-                    animation: gradientShift 15s ease infinite;
-                    background-size: 200% 200%;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
                 }}
-                
-                @keyframes gradientShift {{
-                    0% {{ background-position: 0% 50%; }}
-                    50% {{ background-position: 100% 50%; }}
-                    100% {{ background-position: 0% 50%; }}
-                }}
-                
-                .container {{
-                    max-width: 1200px;
-                    margin: 0 auto;
-                }}
-                
-                .header {{
-                    background: rgba(255, 255, 255, 0.95);
-                    backdrop-filter: blur(10px);
-                    padding: 40px;
-                    border-radius: 20px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                    margin-bottom: 30px;
-                    border: 1px solid rgba(255, 255, 255, 0.3);
-                }}
-                
-                h1 {{
-                    color: #1a202c;
-                    margin-bottom: 10px;
-                    font-size: 36px;
-                    font-weight: 700;
+                .page-title {{
+                    text-align: center;
+                    margin: 40px 0 12px;
+                    color: #fff;
+                    font-size: 2.8em;
+                    font-weight: 800;
+                    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
                     letter-spacing: -0.5px;
                 }}
-                
-                .subtitle {{
-                    color: #718096;
-                    font-size: 16px;
-                    font-weight: 500;
-                    margin-bottom: 20px;
-                }}
-                
-                .stats {{
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin-top: 25px;
-                }}
-                
-                .stat-box {{
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    padding: 25px;
-                    border-radius: 16px;
+                .page-subtitle {{
                     text-align: center;
-                    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-                    transition: all 0.3s ease;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    margin-bottom: 32px;
+                    color: rgba(255, 255, 255, 0.92);
+                    font-size: 1.15em;
+                    font-weight: 400;
+                    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
                 }}
-                
-                .stat-box:hover {{
-                    transform: translateY(-5px);
-                    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+                .button-row {{
+                    text-align: center;
+                    margin-top: 24px;
                 }}
-                
-                .stat-box:nth-child(2) {{
-                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-                }}
-                
-                .stat-box:nth-child(2):hover {{
-                    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
-                }}
-                
-                .stat-number {{
-                    font-size: 48px;
-                    font-weight: 700;
-                    color: white;
-                    margin-bottom: 8px;
-                    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }}
-                
-                .stat-label {{
-                    color: rgba(255, 255, 255, 0.95);
-                    font-size: 14px;
+                .button-row .btn {{
+                    margin: 8px;
+                    min-width: 180px;
+                    padding: 14px 28px;
+                    font-size: 15px;
                     font-weight: 600;
+                    border-radius: 12px;
+                    border: none;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: #fff;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
+                    cursor: pointer;
                 }}
-                
-                .content {{
-                    background: rgba(255, 255, 255, 0.95);
-                    backdrop-filter: blur(10px);
-                    padding: 40px;
+                .button-row .btn:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+                    text-decoration: none;
+                    color: #fff;
+                }}
+                .card-panel {{
+                    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
                     border-radius: 20px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    padding: 32px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.1);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255,255,255,0.2);
                 }}
-                
-                h2 {{
-                    color: #1a202c;
-                    font-size: 24px;
-                    font-weight: 700;
-                    margin-bottom: 25px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }}
-                
-                table {{
-                    width: 100%;
-                    border-collapse: separate;
-                    border-spacing: 0;
-                    margin-top: 20px;
-                }}
-                
-                th {{
-                    text-align: left;
-                    padding: 16px;
+                .stats-bar {{
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
-                    font-weight: 600;
-                    font-size: 14px;
+                    padding: 20px;
+                    border-radius: 16px;
+                    margin-bottom: 24px;
+                    text-align: center;
+                    font-size: 16px;
+                    font-weight: 700;
+                    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+                }}
+                .stats-bar strong {{
+                    font-size: 20px;
+                    margin: 0 4px;
+                }}
+                .table {{
+                    margin-bottom: 0;
+                }}
+                .table th {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    font-weight: 700;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
+                    font-size: 13px;
+                    padding: 14px 12px;
+                    border: none;
                 }}
-                
-                th:first-child {{
+                .table th:first-child {{
                     border-top-left-radius: 12px;
                 }}
-                
-                th:last-child {{
+                .table th:last-child {{
                     border-top-right-radius: 12px;
                 }}
-                
-                td {{
-                    padding: 16px;
-                    border-bottom: 1px solid #e2e8f0;
-                    background: white;
-                    color: #2d3748;
-                    font-size: 15px;
+                .table td {{
+                    vertical-align: middle;
+                    padding: 16px 12px;
+                    font-size: 14px;
+                    border-bottom: 1px solid #e9ecef;
                 }}
-                
-                tbody tr {{
+                .table tbody tr {{
                     transition: all 0.2s ease;
                 }}
-                
-                tbody tr:hover {{
-                    background: #f7fafc;
+                .table tbody tr:hover {{
+                    background: rgba(102, 126, 234, 0.05);
                     transform: scale(1.01);
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-                }}
-                
-                tbody tr:last-child td:first-child {{
-                    border-bottom-left-radius: 12px;
-                }}
-                
-                tbody tr:last-child td:last-child {{
-                    border-bottom-right-radius: 12px;
-                }}
-                
-                .nav-links {{
-                    margin-top: 30px;
-                    padding-top: 30px;
-                    border-top: 2px solid #e2e8f0;
-                    display: flex;
-                    gap: 20px;
-                    flex-wrap: wrap;
-                }}
-                
-                .nav-links a {{
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 12px 24px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 10px;
-                    font-weight: 600;
-                    transition: all 0.3s ease;
-                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-                }}
-                
-                .nav-links a:hover {{
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-                    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-                }}
-                
-                .refresh {{
-                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 10px;
-                    border: none;
-                    cursor: pointer;
-                    font-weight: 600;
-                    font-size: 14px;
-                    transition: all 0.3s ease;
-                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-family: 'Inter', sans-serif;
-                }}
-                
-                .refresh:hover {{
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
-                    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-                }}
-                
-                @media (max-width: 768px) {{
-                    body {{
-                        padding: 15px;
-                    }}
-                    
-                    .header, .content {{
-                        padding: 25px;
-                    }}
-                    
-                    h1 {{
-                        font-size: 28px;
-                    }}
-                    
-                    h2 {{
-                        font-size: 20px;
-                        flex-direction: column;
-                        align-items: flex-start;
-                        gap: 15px;
-                    }}
-                    
-                    .stats {{
-                        grid-template-columns: 1fr;
-                    }}
-                    
-                    table {{
-                        font-size: 14px;
-                    }}
-                    
-                    th, td {{
-                        padding: 12px;
-                    }}
                 }}
             </style>
         </head>
         <body>
             <div class="container">
-                <div class="header">
-                    <h1>👨‍🏫 {teacher_name}'s Class</h1>
-                    <p class="subtitle">Hello, {user.name}! Welcome to your student dashboard</p>
-                    <div class="stats">
-                        <div class="stat-box">
-                            <div class="stat-number">{len(students)}</div>
-                            <div class="stat-label">Total Students</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-number">{active_count}</div>
-                            <div class="stat-label">Currently Active</div>
-                        </div>
+                <h1 class="page-title">{teacher_name}'s Class</h1>
+                <p class="page-subtitle">Hello, {user.name}! Here's your student roster.</p>
+
+                <div class="card-panel">
+                    <div class="stats-bar">
+                        Total Students: <strong>{len(students)}</strong> &nbsp; • &nbsp; Active Now: <strong>{active_count}</strong>
                     </div>
-                </div>
-                
-                <div class="content">
-                    <h2>
-                        <span>📋 Student List</span>
-                        <button class="refresh" onclick="location.reload()">🔄 Refresh</button>
-                    </h2>
-                    <table>
+
+                    <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>👤 Student Name</th>
-                                <th>📊 Status</th>
-                                <th>🕐 Last Activity</th>
+                                <th>Student Name</th>
+                                <th>Status</th>
+                                <th>Last Activity</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {student_rows}
                         </tbody>
                     </table>
-                    
-                    <div class="nav-links">
-                        <a href="/hub/home">← Back to Home</a>
-                        <a href="/hub/admin">⚙️ Admin Panel</a>
-                    </div>
+                </div>
+
+                <div class="button-row">
+                    <a class="btn" href="/hub/home">Back to Home</a>
+                    <button class="btn" onclick="location.reload()">Refresh</button>
                 </div>
             </div>
         </body>

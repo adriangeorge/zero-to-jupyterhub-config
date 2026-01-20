@@ -5,6 +5,8 @@ RELEASE_NAME="ibd-jupyterhub"
 NAMESPACE="ibd"
 CHART_VERSION="4.3.1"
 
+minikube addons enable storage-provisioner
+minikube addons enable default-storageclass
 
 helm repo add jupyterhub https://hub.jupyter.org/helm-chart/
 helm repo update

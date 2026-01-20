@@ -1,0 +1,155 @@
+{% extends "page.html" %}
+
+{% block main %}
+{% set protected_users = ['admin', 'prof_smith', 'prof_jones', 'prof_doe'] %}
+<div class="container">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .z2jh-unified {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .page-title {
+      text-align: center;
+      margin: 40px 0 12px;
+      color: #fff;
+      font-size: 2.8em;
+      font-weight: 800;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      letter-spacing: -0.5px;
+    }
+    .page-subtitle {
+      text-align: center;
+      margin-bottom: 32px;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 1.15em;
+      font-weight: 400;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .table {
+      margin-bottom: 0;
+    }
+    .table th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 13px;
+      padding: 14px 12px;
+      border: none;
+    }
+    .table th:first-child {
+      border-top-left-radius: 12px;
+    }
+    .table th:last-child {
+      border-top-right-radius: 12px;
+    }
+    .table td {
+      vertical-align: middle;
+      padding: 16px 12px;
+      font-size: 14px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .table tbody tr {
+      transition: all 0.2s ease;
+    }
+    .table tbody tr:hover {
+      background: rgba(102, 126, 234, 0.05);
+      transform: scale(1.01);
+    }
+    .table tbody tr.success {
+      background: rgba(56, 239, 125, 0.08);
+    }
+    .table tbody tr.success:hover {
+      background: rgba(56, 239, 125, 0.15);
+    }
+    .btn-xs {
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .btn-xs:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      text-decoration: none;
+      color: #fff;
+    }
+    .text-muted {
+      color: #999;
+      font-style: italic;
+      font-size: 12px;
+    }
+  </style>
+  <h1 class="page-title">Authorization Center</h1>
+  <p class="page-subtitle">Review and approve pending user registrations</p>
+
+  <div class="z2jh-unified">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Username</th>
+          {% if ask_email %}<th>Email</th>{% endif %}
+          <th>Is authorized?</th>
+          <th class="text-center">Authorize</th>
+          <th class="text-center">Change password</th>
+          <th class="text-center">Discard</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+          {% if user.is_authorized %}
+            <tr class="success" id="{{ user.username }}">
+              <td>{{ user.username }}</td>
+              {% if ask_email %}<td>{{ user.email }}</td>{% endif %}
+              <td>Yes</td>
+              <td class="text-center">
+                {% if user.username in protected_users %}
+                  <span class="text-muted">Protected</span>
+                {% else %}
+                  <a class="btn btn-xs" href="{{ base_url }}authorize/{{ user.username }}" role="button">Unauthorize</a>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <a class="btn btn-xs" href="{{ base_url }}change-password/{{ user.username }}" role="button">Change password</a>
+              </td>
+              <td class="text-center"></td>
+            </tr>
+          {% else %}
+            <tr id="{{ user.username }}">
+              <td>{{ user.username }}</td>
+              {% if ask_email %}<td>{{ user.email }}</td>{% endif %}
+              <td>No</td>
+              <td class="text-center">
+                <a class="btn btn-xs" href="{{ base_url }}authorize/{{ user.username }}" role="button">Authorize</a>
+              </td>
+              <td class="text-center">
+                <a class="btn btn-xs" href="{{ base_url }}change-password/{{ user.username }}" role="button">Change password</a>
+              </td>
+              <td class="text-center">
+                <a class="btn btn-xs" href="{{ base_url }}discard/{{ user.username }}" role="button">Discard</a>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
